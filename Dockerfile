@@ -7,9 +7,10 @@ ARG OGG_VERSION=1.3.5
 ARG OGG_URL="https://downloads.xiph.org/releases/ogg/libogg-$OGG_VERSION.tar.gz"
 ARG OGG_SHA256=0eb4b4b9420a0f51db142ba3f9c64b333f826532dc0f48c6410ae51f4799b664
 
-# bump: alpine /FROM alpine:([\d.]+)/ docker:alpine|^3
-# bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
-FROM alpine:3.16.2 AS base
+# Must be specified
+ARG ALPINE_VERSION
+
+FROM alpine:${ALPINE_VERSION} AS base
 
 FROM base AS download
 ARG OGG_URL
@@ -31,9 +32,14 @@ COPY --from=download /tmp/ogg/ /tmp/ogg/
 WORKDIR /tmp/ogg
 RUN \
   apk add --no-cache --virtual build \
-    build-base && \
+    build-base pkgconf && \
   ./configure --disable-shared --enable-static && \
   make -j$(nproc) install && \
+  # Sanity tests
+  pkg-config --exists --modversion --path ogg && \
+  ar -t /usr/local/lib/libogg.a && \
+  readelf -h /usr/local/lib/libogg.a && \
+  # Cleanup
   apk del build
 
 FROM scratch
