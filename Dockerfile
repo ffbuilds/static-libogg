@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 
 # bump: ogg /OGG_VERSION=([\d.]+)/ https://github.com/xiph/ogg.git|*
 # bump: ogg after ./hashupdate Dockerfile OGG $LATEST
